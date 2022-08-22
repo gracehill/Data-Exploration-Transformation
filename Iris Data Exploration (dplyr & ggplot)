@@ -1,0 +1,60 @@
+data(iris)
+library(dplyr)
+head(iris)
+
+iris %>%
+select(Sepal.Length, Sepal.Width, Species) %>%
+group_by(Species) %>%
+arrange(desc(Sepal.Length), .by_group = TRUE) %>%
+arrange(desc(Sepal.Width), .by_group = TRUE) %>%
+mutate(Sepal.Area = Sepal.Length*Sepal.Width) 
+
+iris %>%
+group_by(Species) %>%
+summarize(cor=cor(Sepal.Length, Sepal.Width))
+
+iris %>%
+filter(Species == "setosa") %>%
+select(Sepal.Length, Sepal.Width, Species) %>%
+xtabs(~Sepal.Length, data = .)
+
+model.s <- iris %>%
+filter(Species == "setosa") %>%
+select(Sepal.Length, Sepal.Width, Species) %>%
+lm(Sepal.Length ~ Sepal.Width, data=.)
+summary(model.s)
+
+
+plot(Sepal.Length ~ Sepal.Width, data = iris)
+abline(model.s)
+
+library(ggplot2)
+
+colors = c("blueviolet", "deepskyblue", "deeppink")
+ggplot(iris, aes(x=Sepal.Width, y=Sepal.Length, fill = Species)) +
+ geom_boxplot()+
+scale_fill_manual(values=colors)+
+xlab("Sepal Width")+
+ylab("Sepal Length")
+
+
+ggplot(data = iris, aes(x = Sepal.Width, y = Sepal.Length, color = Species)) +
+geom_point() +
+ggtitle("Sepal Length vs Sepal Width")+
+theme(plot.title = element_text(hjust = 0.5))+
+scale_color_manual(values=colors)+
+xlab("Sepal Width")+
+ylab("Sepal Length")
+
+s.data <- iris %>%
+filter(Species == "setosa") %>%
+select(Sepal.Length, Sepal.Width, Species)
+
+ggplot(data = s.data, aes(x = Sepal.Width, y = Sepal.Length)) +
+geom_point(color = "blueviolet") +
+geom_abline(slope = coef(model.s)[["Sepal.Width"]], 
+              intercept = coef(model.s)[["(Intercept)"]])+
+ggtitle("Sepal Length vs Sepal Width for Setosa Irises") +
+theme(plot.title = element_text(hjust = 0.5))+
+xlab("Sepal Width")+
+ylab("Sepal Length")
