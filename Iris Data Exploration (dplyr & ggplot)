@@ -2,6 +2,8 @@ data(iris)
 library(dplyr)
 head(iris)
 
+#looking at sepal length and sepal width by species
+
 iris %>%
 select(Sepal.Length, Sepal.Width, Species) %>%
 group_by(Species) %>%
@@ -9,14 +11,20 @@ arrange(desc(Sepal.Length), .by_group = TRUE) %>%
 arrange(desc(Sepal.Width), .by_group = TRUE) %>%
 mutate(Sepal.Area = Sepal.Length*Sepal.Width) 
 
+#finding correlation between sepal length and sepal width by iris species
+
 iris %>%
 group_by(Species) %>%
 summarize(cor=cor(Sepal.Length, Sepal.Width))
+
+#making table to find frequency of setosa irises at each sepal length, looking to get idea of distribution
 
 iris %>%
 filter(Species == "setosa") %>%
 select(Sepal.Length, Sepal.Width, Species) %>%
 xtabs(~Sepal.Length, data = .)
+
+#making linear model to find sepal length as a response to sepal width, I found from my correlation analysis that sepal irises had the strongest correlation of these two variables
 
 model.s <- iris %>%
 filter(Species == "setosa") %>%
@@ -24,19 +32,26 @@ select(Sepal.Length, Sepal.Width, Species) %>%
 lm(Sepal.Length ~ Sepal.Width, data=.)
 summary(model.s)
 
+#plotting all of the sepal lengths and widths, plotting the linear model i made to see how it compares to whole data set
 
 plot(Sepal.Length ~ Sepal.Width, data = iris)
 abline(model.s)
 
 library(ggplot2)
 
+#i wanted to make each violet species map to a pretty color
+ 
 colors = c("blueviolet", "deepskyblue", "deeppink")
+
+#making a boxplot, once again getting an idea for the distribution of the data
+
 ggplot(iris, aes(x=Sepal.Width, y=Sepal.Length, fill = Species)) +
- geom_boxplot()+
+geom_boxplot()+
 scale_fill_manual(values=colors)+
 xlab("Sepal Width")+
 ylab("Sepal Length")
 
+#scatterplot of all data 
 
 ggplot(data = iris, aes(x = Sepal.Width, y = Sepal.Length, color = Species)) +
 geom_point() +
@@ -50,6 +65,7 @@ s.data <- iris %>%
 filter(Species == "setosa") %>%
 select(Sepal.Length, Sepal.Width, Species)
 
+#scatter plot of just setosa irises, adding my linear regression
 ggplot(data = s.data, aes(x = Sepal.Width, y = Sepal.Length)) +
 geom_point(color = "blueviolet") +
 geom_abline(slope = coef(model.s)[["Sepal.Width"]], 
@@ -58,3 +74,53 @@ ggtitle("Sepal Length vs Sepal Width for Setosa Irises") +
 theme(plot.title = element_text(hjust = 0.5))+
 xlab("Sepal Width")+
 ylab("Sepal Length")
+
+#finding average sepal area by species
+
+iris %>%
+select(Sepal.Length, Sepal.Width, Species) %>%
+group_by(Species) %>%
+mutate(Sepal.Area = Sepal.Length*Sepal.Width) %>%
+summarise_at(vars(Sepal.Area), list(name = mean))
+
+#making graph of average sepal area and petal area  by species (linking data manipulation with pipe and data visualization)
+
+petal_sepal_area_graph <- iris%>%
+mutate(Petal.Area = Petal.Length*Petal.Width) %>%
+mutate(Sepal.Area = Sepal.Length*Sepal.Width) %>%
+ggplot(mapping = aes(x = Petal.Area , y = Sepal.Area, color = Species)) +
+geom_point()+
+scale_color_manual(values=colors)+
+ggtitle("Sepal Area vs Petal Area")+
+theme(plot.title = element_text(hjust = 0.5))+
+xlab("Petal Area")+
+ylab("Sepal Area")
+
+
+petal_sepal_area_graph
+
+#boxplot of sepal and petal area 
+
+petal_sepal_area_boxplot <- iris%>%
+mutate(Petal.Area = Petal.Length*Petal.Width) %>%
+mutate(Sepal.Area = Sepal.Length*Sepal.Width) %>%
+ggplot(mapping = aes(x = Petal.Area , y = Sepal.Area, fill = Species)) +
+geom_boxplot()+
+scale_fill_manual(values=colors)+
+xlab("Petal Area")+
+ylab("Sepal Area")
+
+petal_sepal_area_boxplot
+
+#ok so I am interested to see what the distribution of petal area of each species is, im going to make some histograms real quick
+
+petal.data <- iris%>%
+mutate(Petal.Area = Petal.Length*Petal.Width)%>%
+select(Species, Petal.Area) 
+
+ggplot(data = petal.data, aes(x = Petal.Area)) + geom_histogram(binwidth = 1)+
+facet_wrap(~Species)+
+xlab("Petal Area")+
+ylab("Count")
+
+#so we can see that setosa irises have very little petal area 
